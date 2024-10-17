@@ -17,10 +17,10 @@ class DevicesController {
       }
 
       const devices = JSON.parse(data);
-      const { name, minPrice, maxPrice } = new URL(
-        req.url,
-        `http://${req.headers.host}`
-      );
+      const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
+      const name = searchParams.get("name");
+      const minPrice = parseFloat(searchParams.get("minPrice")) || undefined;
+      const maxPrice = parseFloat(searchParams.get("maxPrice")) || undefined;
 
       const filteredDevices = devices.filter(
         (device) =>
