@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "name": "Sony WX-1000XM4",
+    "price": 250
+  },
+  {
+    "id": 2,
+    "name": "Iphone 13 Pro",
+    "price": 500
+  },
+  {
+    "id": 3,
+    "name": "Google Pixel 7",
+    "price": 600
+  },
+  {
+    "id": 4,
+    "name": "Glass Mouse Pad",
+    "price": 40
+  },
+  {
+    "id": 5,
+    "name": "Razer Enki",
+    "price": 500
+  },
+  {
+    "id": 6,
+    "name": "Logitech G PRO X Superlight ",
+    "price": 75
+  }
+]

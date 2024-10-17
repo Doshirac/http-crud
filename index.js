@@ -1,22 +1,22 @@
 import http from "node:http";
-import UsersController from "./users.controller.js";
+import DevicesController from "./devices.controller.js";
 
 const SERVER_PORT = 8080;
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (url.pathname === "/users" && req.method === "GET") {
-    UsersController.findMany(req, res);
-  } else if (url.pathname.startsWith("/users/") && req.method === "GET") {
-    UsersController.findOne(req, res);
-  } else if (url.pathname === "/users" && req.method === "POST") {
-    UsersController.createOne(req, res);
-  } else if (url.pathname.startsWith("/users/") && req.method === "PUT") {
-    UsersController.updateOne(req, res);
-  } else if (url.pathname.startsWith("/users/") && req.method === "PATCH") {
-    UsersController.patchOne(req, res);
-  } else if (url.pathname.startsWith("/users/") && req.method === "DELETE") {
-    UsersController.deleteOne(req, res);
+  if (url.pathname === "/devices" && req.method === "GET") {
+    DevicesController.findMany(req, res);
+  } else if (url.pathname.startsWith("/devices/") && req.method === "GET") {
+    DevicesController.findOne(req, res);
+  } else if (url.pathname === "/devices" && req.method === "POST") {
+    DevicesController.createOne(req, res);
+  } else if (url.pathname.startsWith("/devices/") && req.method === "PUT") {
+    DevicesController.updateOne(req, res);
+  } else if (url.pathname.startsWith("/devices/") && req.method === "PATCH") {
+    DevicesController.patchOne(req, res);
+  } else if (url.pathname.startsWith("/devices/") && req.method === "DELETE") {
+    DevicesController.deleteOne(req, res);
   } else {
     res.writeHead(405, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Method Not Allowed" }));

@@ -5,31 +5,32 @@ import { dirname } from "node:path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const filePath = path.join(__dirname, "users.json");
+const filePath = path.join(__dirname, "devices.json");
 
-class UsersController {
+class DevicesController {
   static findMany(req, res) {
     fs.readFile(filePath, "utf8", (err, data) => {
       if (err) {
-        res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Error reading file" }));
-        return;
+        return res
+          .writeHead(500, { "Content-Type": "application/json" })
+          .end(JSON.stringify({ error: "Error reading file" }));
       }
 
-      const users = JSON.parse(data);
-      const { name, minAge, maxAge } = new URL(
+      const devices = JSON.parse(data);
+      const { name, minPrice, maxPrice } = new URL(
         req.url,
         `http://${req.headers.host}`
-      ).searchParams;
-      const filteredUsers = users.filter((user) => {
-        return (
-          (!name || user.name === name) &&
-          (!minAge || user.age >= minAge) &&
-          (!maxAge || user.age <= maxAge)
-        );
-      });
+      );
+
+      const filteredDevices = devices.filter(
+        (device) =>
+          (!name || device.name.toLowerCase().includes(name.toLowerCase())) &&
+          (minPrice === undefined || device.price >= minPrice) &&
+          (maxPrice === undefined || device.price <= maxPrice)
+      );
+
       res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ data: filteredUsers }));
+      res.end(JSON.stringify({ data: filteredDevices }));
     });
   }
 
@@ -41,15 +42,15 @@ class UsersController {
         return;
       }
 
-      const users = JSON.parse(data);
+      const devices = JSON.parse(data);
       const id = parseInt(req.url.split("/")[2], 10);
-      const user = users.find((user) => user.id === id);
-      if (user) {
+      const device = devices.find((device) => device.id === id);
+      if (device) {
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ data: user }));
+        res.end(JSON.stringify({ data: device }));
       } else {
         res.writeHead(404, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "User Not Found" }));
+        res.end(JSON.stringify({ error: "Device Not Found" }));
       }
     });
   }
@@ -61,7 +62,7 @@ class UsersController {
     });
     req.on("end", () => {
       const bodyParsed = JSON.parse(body);
-      if (bodyParsed.name && bodyParsed.age) {
+      if (bodyParsed.name && bodyParsed.price) {
         fs.readFile(filePath, "utf8", (err, data) => {
           if (err) {
             res.writeHead(500, { "Content-Type": "application/json" });
@@ -69,16 +70,16 @@ class UsersController {
             return;
           }
 
-          const users = JSON.parse(data);
-          const newUser = {
-            id: users[users.length - 1].id + 1,
+          const devices = JSON.parse(data);
+          const newDevice = {
+            id: devices[devices.length - 1].id + 1,
             name: bodyParsed.name,
-            age: bodyParsed.age,
+            price: bodyParsed.price,
           };
-          users.push(newUser);
+          devices.push(newDevice);
           fs.writeFile(
             filePath,
-            JSON.stringify(users, null, 2),
+            JSON.stringify(devices, null, 2),
             "utf8",
             (err) => {
               if (err) {
@@ -87,7 +88,7 @@ class UsersController {
                 return;
               }
               res.writeHead(200, { "Content-Type": "application/json" });
-              res.end(JSON.stringify({ data: newUser }));
+              res.end(JSON.stringify({ data: newDevice }));
             }
           );
         });
@@ -95,7 +96,7 @@ class UsersController {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(
           JSON.stringify({
-            error: "Request body must contain both name and age fields",
+            error: "Request body must contain both name and price fields",
           })
         );
       }
@@ -109,8 +110,8 @@ class UsersController {
       body += chunk.toString();
     });
     req.on("end", () => {
-      const updatedUser = JSON.parse(body);
-      if (updatedUser.name && updatedUser.age) {
+      const updatedDevice = JSON.parse(body);
+      if (updatedDevice.name && updatedDevice.price) {
         fs.readFile(filePath, "utf8", (err, data) => {
           if (err) {
             res.writeHead(500, { "Content-Type": "application/json" });
@@ -118,13 +119,13 @@ class UsersController {
             return;
           }
 
-          const users = JSON.parse(data);
-          const userIndex = users.findIndex((user) => user.id === id);
-          if (userIndex !== -1) {
-            users[userIndex] = { id, ...updatedUser };
+          const devices = JSON.parse(data);
+          const deviceIndex = devices.findIndex((device) => device.id === id);
+          if (deviceIndex !== -1) {
+            devices[deviceIndex] = { id, ...updatedDevice };
             fs.writeFile(
               filePath,
-              JSON.stringify(users, null, 2),
+              JSON.stringify(devices, null, 2),
               "utf8",
               (err) => {
                 if (err) {
@@ -133,19 +134,19 @@ class UsersController {
                   return;
                 }
                 res.writeHead(200, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({ data: users[userIndex] }));
+                res.end(JSON.stringify({ data: devices[deviceIndex] }));
               }
             );
           } else {
             res.writeHead(404, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ error: "User Not Found" }));
+            res.end(JSON.stringify({ error: "Device Not Found" }));
           }
         });
       } else {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(
           JSON.stringify({
-            error: "Request body must contain both name and age fields",
+            error: "Request body must contain both name and price fields",
           })
         );
       }
@@ -160,7 +161,7 @@ class UsersController {
     });
     req.on("end", () => {
       const updates = JSON.parse(body);
-      if (updates.name || updates.age) {
+      if (updates.name || updates.price) {
         fs.readFile(filePath, "utf8", (err, data) => {
           if (err) {
             res.writeHead(500, { "Content-Type": "application/json" });
@@ -168,14 +169,14 @@ class UsersController {
             return;
           }
 
-          const users = JSON.parse(data);
-          const user = users.find((user) => user.id === id);
-          if (user) {
-            if (updates.name) user.name = updates.name;
-            if (updates.age) user.age = updates.age;
+          const devices = JSON.parse(data);
+          const device = devices.find((device) => device.id === id);
+          if (device) {
+            if (updates.name) device.name = updates.name;
+            if (updates.price) device.price = updates.price;
             fs.writeFile(
               filePath,
-              JSON.stringify(users, null, 2),
+              JSON.stringify(devices, null, 2),
               "utf8",
               (err) => {
                 if (err) {
@@ -184,12 +185,12 @@ class UsersController {
                   return;
                 }
                 res.writeHead(200, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({ data: user }));
+                res.end(JSON.stringify({ data: device }));
               }
             );
           } else {
             res.writeHead(404, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ error: "User Not Found" }));
+            res.end(JSON.stringify({ error: "Device Not Found" }));
           }
         });
       } else {
@@ -212,13 +213,13 @@ class UsersController {
         return;
       }
 
-      let users = JSON.parse(data);
-      const user = users.find((user) => user.id === id);
-      if (user) {
-        users = users.filter((user) => user.id !== id);
+      let devices = JSON.parse(data);
+      const device = devices.find((device) => device.id === id);
+      if (device) {
+        devices = devices.filter((device) => device.id !== id);
         fs.writeFile(
           filePath,
-          JSON.stringify(users, null, 2),
+          JSON.stringify(devices, null, 2),
           "utf8",
           (err) => {
             if (err) {
@@ -227,15 +228,15 @@ class UsersController {
               return;
             }
             res.writeHead(200, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ data: user }));
+            res.end(JSON.stringify({ data: device }));
           }
         );
       } else {
         res.writeHead(404, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "User Not Found" }));
+        res.end(JSON.stringify({ error: "Device Not Found" }));
       }
     });
   }
 }
 
-export default UsersController;
+export default DevicesController;
